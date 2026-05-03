@@ -3,61 +3,65 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "font",
-    aliases: ["fontstyle"],
-    version: "4.3",
-    author: "xalman",
-    countDown: 5,
+    version: "1.0",
+    author: "S AY EM",
     role: 0,
-    shortDescription: "Generate stylish fonts & see list",
-    category: "tools",
-    guide: "{pn} [text] [style_id] or {pn} list"
+    shortDescription: "Convert text to stylish font",
+    longDescription: "Use API to generate stylish fonts",
+    category: "fun",
+    guide: {
+      en: "{pn} <style> <text>\n{pn} list"
+    }
   },
 
-  onStart: async function ({ api, event, args }) {
-    const { threadID, messageID } = event;
-    const API_URL = "https://xalman-apis.vercel.app/api/font";
+  onStart: async function ({ message, args }) {
+    try {
+      if (args[0] === "list") {
+        const res = await axios.get(
+          "https://sayem-apixs.vercel.app/api/styles/font?style=list"
+        );
 
-    if (args[0] && args[0].toLowerCase() === "list") {
-      api.setMessageReaction("📜", messageID, () => {}, true);
-      try {
-        const res = await axios.get(`${API_URL}?text=xalman&style=List`);
         const previews = res.data.previews;
-        
-        let listMsg = "❖ 𝖥𝖮𝖭𝖳 𝖲𝖳𝖸𝖫𝖨𝖲𝖳 𝖯𝖱𝖤𝖵𝖨𝖤𝖶 ❖\n━━━━━━━━━━━━━━━━━━\n";
-        
-        for (const [id, text] of Object.entries(previews)) {
-          listMsg += `${id}. ${text}\n`;
+
+        let msg = "✨ Available Styles:\n\n";
+        let count = 0;
+
+        for (let key in previews) {
+          msg += `${key} → ${previews[key]}\n`;
+          count++;
+
+          if (count >= 30) break;
         }
 
-        listMsg += "━━━━━━━━━━━━━━━━━━\n𝖴𝗌𝖺𝗀𝖾: /font [text] [id]";
-        
-        return api.sendMessage(listMsg, threadID, messageID);
-      } catch (err) {
-        return api.sendMessage("✕ API Error!", threadID, messageID);
-      }
-    }
-
-    const styleID = args.pop(); 
-    const text = args.join(" ");
-
-    if (!text || isNaN(styleID)) {
-      return api.sendMessage("╭─❍\n│ 𝖴𝗌𝖺𝗀𝖾: /font [text] [style_id]\n│ 𝖤𝗑: /font xalman 15\n╰───────────⟡", threadID, messageID);
-    }
-
-    try {
-      api.setMessageReaction("✍️", messageID, () => {}, true);
-      const res = await axios.get(`${API_URL}?text=${encodeURIComponent(text)}&style=${styleID}`);
-      
-      if (res.data.status === false) {
-        return api.sendMessage(`✕ Invalid Style!`, threadID, messageID);
+        msg += "\nUse: font <style> <text>";
+        return message.reply(msg);
       }
 
-      api.setMessageReaction("✅", messageID, () => {}, true);
-      return api.sendMessage(res.data.result, threadID, messageID);
+      const style = args[0];
+      const text = args.slice(1).join(" ");
 
-    } catch (error) {
-      api.setMessageReaction("❌", messageID, () => {}, true);
-      return api.sendMessage("✕ API Error!", threadID, messageID);
+      if (!style || !text) {
+        return message.reply(
+          "❌ Usage:\nfont <style> <text>\n\nExample:\nfont 1 Hello"
+        );
+      }
+
+      const url = `https://sayem-apixs.vercel.app/api/styles/font?text=${encodeURIComponent(
+        text
+      )}&style=${style}`;
+
+      const res = await axios.get(url);
+
+      if (!res.data.status) {
+        return message.reply("❌ " + res.data.message);
+      }
+
+      return message.reply(
+        `✨ Style: ${style}\n\n${res.data.result}`
+      );
+
+    } catch (err) {
+      return message.reply("⚠️ API error or server down!");
     }
   }
 };
