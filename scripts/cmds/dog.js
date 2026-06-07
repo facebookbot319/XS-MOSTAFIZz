@@ -8,7 +8,7 @@ module.exports = {
         name: "dog",
         aliases: ["dogs", "kutta"],
         version: "3.0.0",
-        author: "xalman",
+        author: "S AY EM",
         countDown: 5,
         role: 0,
         shortDescription: { en: "Convert someone into a dog" },
